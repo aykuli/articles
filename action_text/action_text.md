@@ -8,7 +8,7 @@
 [Файлы миграции](#migrations)
 [Сгенерированные файлы. Остальное.](#generated-rest)
 [Связи в таблицах](#tables-relations)
-[Как экземпляр нашей модели связывается с экземпляром ActionText](#how-model-links-to-active-text)
+[Как экземпляр нашей модели связывается с экземпляром ActionText в таблице action_text_rich_texts](#how-model-links-to-active-text)
 [Возможные ошибки](#errors)
 
 ## <span id='ctx'>Контекст</span>
@@ -285,7 +285,7 @@ figure class="attachment attachment--<%= blob.representable? ? "preview" : "file
 Здесь вставляется `body`, который сохранен в виде html, из строки записи таблицы `action_text_rich_texts`.
 
 
-## <span id='how-model-links-to-active-text'>Как экземпляр нашей модели связывается с экземпляром ActionText</span>
+## <span id='how-model-links-to-active-text'>Как экземпляр нашей модели связывается с экземпляром ActionText в таблице action_text_rich_texts</span>
 
 В модели мы пишем ассоциацию [`has_rich_text`](https://guides.rubyonrails.org/action_text_overview.html#creating-rich-text-content)
 ```ruby
