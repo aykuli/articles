@@ -9,6 +9,7 @@
 [Сгенерированные файлы. Остальное.](#generated-rest)
 [Связи в таблицах](#tables-relations)
 [Как экземпляр нашей модели связывается с экземпляром ActionText в таблице action_text_rich_texts](#how-model-links-to-active-text)
+[Как сохраняются файлы в таблице active_storage_blobs](#how-active_storage_blobs-save-files)
 [Возможные ошибки](#errors)
 
 ## <span id='ctx'>Контекст</span>
@@ -313,7 +314,7 @@ end
 
 Код с гитхаба репозитория `rails` этого метода читаю так:
 * Создаются методы для экземпляра модели предикат `body?`, сеттер и геттер для этого поля.
-* Создается [ассоциация](https://guides.rubyonrails.org/association_basics.html#the-has-one-association) `rich_text_body` с именем класса "ActionText::RichText", с именем поля `name`. `as: :record` - признак [полиморфной связи](https://guides.rubyonrails.org/association_basics.html#polymorphic-associations), что также видно было в миграции при созданий таблицы `action_text_rich_texts`. Эта ассоциация инверсная, то есть из экземпляра модели `ActionText::RichText` можно получить значение этого поля через вызов метода `record`.
+* Создается [ассоциация](https://guides.rubyonrails.org/association_basics.html#the-has-one-association) `rich_text_body` с именем класса "ActionText::RichText", с именем поля `name`. `as: :record` - признак [полиморфной связи](https://guides.rubyonrails.org/association_basics.html#polymorphic-associations), что также видно было в миграции при созданий таблицы `action_text_rich_texts`. Эта ассоциация инверсная, то есть из экземпляра модели [ActionText::RichText](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/actiontext/app/models/action_text/rich_text.rb#L8) можно получить значение этого поля через вызов метода `record`.
   
 <details>
   <summary>Проверяю в консоли вышенаписанное:</summary>
@@ -370,9 +371,62 @@ end
 
 Итого, видно, что `note.body` и поиск экземпляра `ActionText::RichText` по известному `id` ссылаются на одну и ту же запись, что и показывает, что опция `inverse_of` работает ожидаемо.
 
+## <span id='how-active_storage_blobs-save-files'>Как сохраняются файлы в таблице active_storage_blobs</span>
+
+При создании новой записи в Trix-редакторе, нажимая на значок скрепки вы можете добавить файл. При выборе оного, например, рисунка, в консоли, где запущен сервер, вы можете увидеть, что делается запрос `POST "/rails/active_storage/direct_uploads"`, который обрабатывается [ActiveStorage::DirectUploadsController#create](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/activestorage/app/controllers/active_storage/direct_uploads_controller.rb#L7) с параметрами:
+```JSON
+{
+  "blob": {
+    "filename": "cat.jpg",
+    "content_type": "image/jpeg",
+    "byte_size": 107329,
+    "checksum": "JuFhMdR3g4JjS73owAJLQA=="
+  },
+  "direct_upload": {
+    "blob": {
+      "filename": "cat.jpg",
+      "content_type": "image/jpeg",
+      "byte_size": 107329,
+      "checksum": "JuFhMdR3g4JjS73owAJLQA=="
+      }
+    }
+  }
+```
+В `ActiveStorage::DirectUploadsController#create` происходит [сохранение](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/activestorage/app/models/active_storage/blob.rb#L103) нужных параметров этого файла.
+
+<details>
+  <summary>Вы можете это видеть выполненной транзакцией в консоли.</summary>
+
+```ruby
+TRANSACTION (0.3ms)  BEGIN
+ActiveStorage::Blob Create (0.8ms)  INSERT INTO "active_storage_blobs" ("key", "filename", "content_type", "metadata", "service_name", "byte_size", "checksum", "created_at") VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "id"  [["key", "x0v6j8e8pef6vugldaen4924sty8"], ["filename", "cat.jpg"], ["content_type", "image/jpeg"], ["metadata", nil], ["service_name", "local"], ["byte_size", 107329], ["checksum", "JuFhMdR3g4JjS73owAJLQA=="], ["created_at", "2023-02-19 14:25:06.141991"]]
+TRANSACTION (1.4ms)  COMMIT
+
+Disk Storage (0.4ms) Generated URL for file at key: x0v6j8e8pef6vugldaen4924sty8 (http://localhost:3000/rails/active_storage/disk/<some_long_hash>)
+
+```
+</details>
+
+Ниже транзакции показана сгенерированная ссылка для сохраняемого файла. Ссылка эта зависит от вашего сервиса, в данном случае, это локальный диск и сохраняется файл методом [upload](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/activestorage/lib/active_storage/service/disk_service.rb#L19). Из значение `key` [генерируется папка](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/activestorage/lib/active_storage/service/disk_service.rb#L99) сохранения файла. Поддерживаемые сервисы можно увидеть [тут](https://github.com/rails/rails/tree/main/activestorage/lib/active_storage/service) или в [документации к Active Storage](https://guides.rubyonrails.org/active_storage_overview.html).
+![Сохранение файлов с Active Storage на диске через Disk service ](img/active_storage_blobs.png)
+Ну, и собственно файл [сохраняется на носителе](https://github.com/rails/rails/blob/0f61a0e9c991676623767d47dc1aa88e7b0acc1a/activestorage/app/controllers/active_storage/disk_controller.rb#L22)..
+
+![Сохранение файла](img/saving_file_on_disk.png)
+
+ <!-- и идет запрос GET на [получение этого файла](https://github.com/rails/rails/blob/0f61a0e9c991676623767d47dc1aa88e7b0acc1a/activestorage/app/controllers/active_storage/blobs/redirect_controller.rb#L12)
+  -->
+
+Затем контент-менеджер нажимает на кнопку Сохарнить и сохраняет запись. Здесь видно, что ссылка на файл сохраняется прямо в теле rich_text.
+![Сохранение ссылки на файл в теле текста](img/saving_rich_action_text_with_link_to_image.png)
+При сохранении всего этого добра делается запись в таблицу `active_storage_attachments`, которая сохраняет связь между таблицами `action_text_rich_texts` и `active_storage_blobs`.
+
 
 ---------------------
 
 
 Later then I wanted to draw a schema of tables relations in mermaid.
 Generated ID from action Text doc page.
+
+Зачем нужен `active_storage_variant_records` ?
+Как сохранить изображения в minio?
+Как сохранять несколько вариантов изображений?
