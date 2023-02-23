@@ -480,9 +480,9 @@ config.active_storage.service = :minio
 Пробуем в нашем редакторе Trix сохранять файлы/рисунки и проверяем, что они сохраняются в Minio. Я проверяла в пользовательском интерфейсе Minio, доступный по ендпоинту Minio на порту 9001.
 
 Итого:
-Минимальный цикл CMS(content management system) вроде бы закрыт. Но некоторые вопросы в данной статье остались не раскрытыми. Вопросы, которые я остались для меня открытыми:
+Минимальный цикл CMS (content management system) вроде бы закрыт. Но некоторые вопросы в данной статье остались для меня открытыми. Например:
 * использование пакета [libvips](https://github.com/libvips/libvips) вместо [ImageMagick](https://imagemagick.org/index.php). Пишут, что второй новее и [быстрее](https://github.com/libvips/libvips/wiki/Speed-and-memory-use).
-* сохранение нескольких вариантов изображений для разного размера экранов устройств с использованием таблицы `active_storage_variant_records`. В атрибуте `has_many_attached :embeds` класса [ActionText::RichText](https://github.com/rails/rails/blob/b0dd7c7ae21d692b6e38428e8abe0e9538b75711/actiontext/app/models/action_text/rich_text.rb#L15) я не увидела `variant`, как показано в [документации ](https://guides.rubyonrails.org/active_storage_overview.html#has-many-attached).
+* сохранение нескольких вариантов изображений для разного размера экранов устройств с использованием таблицы `active_storage_variant_records`. В атрибуте `has_many_attached :embeds` класса [ActionText::RichText](https://github.com/rails/rails/blob/b0dd7c7ae21d692b6e38428e8abe0e9538b75711/actiontext/app/models/action_text/rich_text.rb#L15) я не увидела `variant`, как показано в [документации](https://guides.rubyonrails.org/active_storage_overview.html#has-many-attached).
 
-Удовольствия вам от программирования, друзья!
+На сегодня все. Удовольствия вам от программирования, друзья!
 
