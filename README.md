@@ -6,3 +6,7 @@
 
 ### Upcoming:
 * ActionText
+
+### Ideas
+
+* https://github.com/svenfuchs/rails-i18n with rspec

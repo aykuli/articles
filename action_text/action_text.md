@@ -421,6 +421,64 @@ Disk Storage (0.4ms) Generated URL for file at key: x0v6j8e8pef6vugldaen4924sty8
 При сохранении всего этого добра делается запись в таблицу `active_storage_attachments`, которая сохраняет связь между таблицами `action_text_rich_texts` и `active_storage_blobs`.
 
 
+Перенастройка сохранения файлов на Minio
+ДЕлаем все согласно [документации](https://guides.rubyonrails.org/active_storage_overview.html#s3-service-amazon-s3-and-s3-compatible-apis) и все получается.
+
+1) Пишем конфигурацию в `config/storage.yml`
+
+<details>
+<summary>Содержимое файла `config/storage.yml`</summary>
+
+```yaml
+test:
+  service: Disk
+  root: <%= Rails.root.join("tmp/storage") %>
+
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+minio:
+  service: S3
+  endpoint: <%= ENV.fetch('MINIO_ENDPOINT') %>
+  access_key_id: <%= ENV.fetch('MINIO_ROOT_USER') %>
+  secret_access_key: <%= ENV.fetch('MINIO_ROOT_PASSWORD') %>
+  region: us-east-1
+  bucket: <%= ENV.fetch('MINIO_BUCKET') %>
+  force_path_style: true
+```
+</details>
+
+В .env файле прописываем используемые переменнные. Напомню, что для использования этих переменных нужен гем `dotenv-rails`.
+
+2) Устанавливаем гем `aws-sdk-s3`
+
+3) В файле `config/environment/production.rb` добавляем строку или переписываем уже имеющуюся:
+
+```ruby
+config.active_storage.service = :minio
+```
+
+4) В `docker-compose.yml` добавляем сервис minio:
+
+```yaml
+  minio:
+     image: minio/minio:latest
+     container_name: minio
+     volumes:
+       - /home/minio:/files
+     ports:
+       - 9000:9000
+       - 9001:9001
+     environment:
+       MINIO_USER: ${MINIO_USER}
+       MINIO_PASSWORD: ${MINIO_PASSWORD}
+     command: server --console-address ":9001" /files
+```
+
+5) Устанавливаем новый гем: `bundle install`
+6) Пробуем в нашем редакторе Trix:
+todo Прикрепить скрин того, как в html action-text-attachment прикрепился файл.
 ---------------------
 
 
@@ -428,5 +486,4 @@ Later then I wanted to draw a schema of tables relations in mermaid.
 Generated ID from action Text doc page.
 
 Зачем нужен `active_storage_variant_records` ?
-Как сохранить изображения в minio?
 Как сохранять несколько вариантов изображений?
