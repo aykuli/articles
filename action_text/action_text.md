@@ -1,4 +1,4 @@
-# ActionText в Ruby on Rails. Обзор первого знакомства.
+# ActionText в Ruby on Rails. Обзор первого знакомства
 
 Содержание
 
@@ -10,42 +10,42 @@
 ## <span id='goal'>Цель</span>
 
 Возможность создания, хранения и редактирования текста с рисунками, прикрепленными файлами - частая задача. Суть задачи - сделать удобный инструмент контент-менеджеру для добавления текстовых данных на сайт.
-В [Ruby on Rails](https://rubyonrails.org/) для этой цели есть модуль [ActionText](https://api.rubyonrails.org/classes/ActionText.html) с [соответствующей  документацией](https://guides.rubyonrails.org/action_text_overview.html), который добавляет возможность редактирования текста в Rails. Он включает в себя редактор [Trix](https://trix-editor.org/), который написан на JavaScript, запускается на стороне клиента(браузера) и рисует довольно дружественный редактор.
+В [Ruby on Rails](https://rubyonrails.org/) для этой цели есть модуль [ActionText](https://api.rubyonrails.org/classes/ActionText.html) с [соответствующей  документацией](https://guides.rubyonrails.org/action_text_overview.html), который добавляет возможность редактирования текста в Rails. Он включает в себя редактор [Trix](https://trix-editor.org/). Редактор написан на JavaScript, запускается на стороне клиента (браузера) и рисует довольно дружественный интерфейс.
 
 ![Trix редактор](img/trix_looks_like.png)
 
-Создание модели `Note`, контроллера, миграции, представлений (show/edit/new.html.erb), роутинга, связанных с этой моделью вне темы этой статьи.
+Создание модели `Note`, контроллера, миграции, представлений (show/edit/new.html.erb), роутинга, связанных с этой моделью выходит за рамки этой статьи.
 
 ## <span id='generated'>Сгенерированные файлы</span>
 Для начала работы с модулем `Action Text` устанавливаем нужные библиотеки командой:
-```shell
-bin/rails action_text:install
+```ruby
+> bin/rails action_text:install
 ```
 
 После выполнения этой команды вы увидите множество измененных и сгенерированных файлов:
 
 ![Список измененных и сгенерированных файлов командой `bin/rails action_text:instal`](img/generated_and_changed_files.png)
 
-Хорошо бы прочитать эти файлы, чтобы понимать, что происходит. Пройдемся по ним и узнаем:
+Хорошо бы понимать, что происходит. Почитаем файлы и узнаем:
 #### 1. `Gemfile`, `Gemfile.lock`
 
-Предыдущим действием мы устанавили гем [image_processing](https://github.com/janko/image_processing). Этот пакет нужен, чтобы обрабатывать(сжимать, изменять размер) и загружать рисунки в добавляемый контент. Этот гем использует либо [ImageMagick](https://www.imagemagick.org/)/[GraphicsMagick](https://www.imagemagick.org/), либо [libvips](http://libvips.github.io/libvips/).
+Предыдущим действием мы устанавили гем [image_processing](https://github.com/janko/image_processing). Этот пакет нужен, чтобы обрабатывать (сжимать, изменять размер) и загружать рисунки в добавляемый контент. Этот гем использует либо [ImageMagick](https://www.imagemagick.org/)/[GraphicsMagick](https://www.imagemagick.org/), либо [libvips](http://libvips.github.io/libvips/).
 
 В `Gemfile.lock` можно посмотреть установленные библиотеки-зависимости для `image_processing`. Нужность их описана [здесь](https://guides.rubyonrails.org/active_storage_overview.html#requirements). 
-Для работы этого гема я добавила в `config/application.rb` строку [как написано в описании класса ActiveStorage::Variant](https://github.com/rails/rails/blob/aa2052ec4ceb64682828154e8669ac0327c678db/activestorage/app/models/active_storage/variant.rb#L14)):
+Для работы этого гема я добавила в `config/application.rb` строку ([из описания класса ActiveStorage::Variant](https://github.com/rails/rails/blob/aa2052ec4ceb64682828154e8669ac0327c678db/activestorage/app/models/active_storage/variant.rb#L14)):
 
 ```ruby
 config.active_storage.variant_processor = :mini_magick
 ```
 #### 3. `app/javascript/application.js`
 
-Здесь импортировали JavaScript библиотеки [trix](https://www.npmjs.com/package/trix) и [@rails/actiontext](https://www.npmjs.com/package/@rails/actiontext)
+Здесь импортировали JavaScript библиотеки [trix](https://www.npmjs.com/package/trix) и [@rails/actiontext](https://www.npmjs.com/package/@rails/actiontext).
 
 #### 4. `config/importmap.rb`
-Здесь создаются соотвествия библиотек и сгенерированных js-файлов и отдаются клиенту в соответствии c этими названиями. Тут добавился JavaScript код для `Trix`. В `DevTools` во вкладке `Debugger` можно посмотреть эти соответсвия на рисунке ниже, где
-  1 - importmap
-  2 - js - файлы
-  3 - trix редактор в браузере.
+В этом файле создаются соотвествия библиотек и сгенерированных js-файлов и отдаются клиенту в соответствии c этими названиями. Тут добавился JavaScript код для `Trix`. В `DevTools` во вкладке `Debugger` можно посмотреть эти соответсвия. Пример на рисунке ниже, где
+  1 - imports,
+  2 - js - файлы,
+  3 - Trix редактор в браузере.
 
 ![Importmap в действии](img/importmap-description.png)
 
@@ -264,7 +264,7 @@ end
 
 Описание к рисунку хранится как часть текста в таблице `action_text_rich_texts`.
 
-В `_blob.html.erb` я добавила ссылку на файл, чтобы его скачать с условием, чтобы ссылки не было для рисунков.
+В `_blob.html.erb` я добавила ссылку на файл для скачивания.
 
 ## <span id='how-model-links-to-active-text'>Как экземпляр нашей модели связывается с экземпляром ActionText в таблице action_text_rich_texts?</span>
 
@@ -372,8 +372,7 @@ end
 ```
 В `ActiveStorage::DirectUploadsController#create` происходит [сохранение](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/activestorage/app/models/active_storage/blob.rb#L103) нужных параметров этого файла.
 
-<details>
-  <summary>Вы можете это видеть выполненной транзакцией в консоли.</summary>
+В консоли выглядит таким образом:
 
 ```ruby
 TRANSACTION (0.4ms)  BEGIN
@@ -381,15 +380,10 @@ ActiveStorage::Blob Create (0.7ms)  INSERT INTO "active_storage_blobs" ("key", "
 TRANSACTION (0.8ms)  COMMIT
 S3 Storage (45.7ms) Generated URL for file at key: ikydgdsgyrgupbqqh0wdqtgs75y4 (http://localhost:9000/main/ikydgdsgyrgupbqqh0wdqtgs75y4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin%2F20230223%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20230223T163600Z&X-Amz-Expires=300&X-Amz-SignedHeaders=content-length%3Bcontent-md5%3Bcontent-type%3Bhost&X-Amz-Signature=696eaa54d2f921beaa552de1263fdb8b548708d12ebbdd3df6e97d7077dedeff)
 ```
-</details>
-
-
-Ниже транзакции показана сгенерированная ссылка для сохраняемого файла. Ссылка эта зависит от конфигурации модуля Active Storage в файле `config/storage.yml`, в данном скрине, это - сервис S3 на minio на локальном диске.
-
-Для первого знакомства можно воспользоваться хранением на локальном диске, описанный как `local` в файле `config/storage.yml` и настроенный по умолчанию. В этом случае service будет Disk. Из значение `key` [генерируется название файла и его папка](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/activestorage/lib/active_storage/service/disk_service.rb#L99) и все папки с этими файлами хранятся в папке `storage`.
+По умолчанию файлы хранятся на локальном диске, описанный как `local` в файле `config/storage.yml` и настроенный по умолчанию. В этом случае service будет Disk. Из значение `key` сохраненного файла [генерируется название файла и его папка](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/activestorage/lib/active_storage/service/disk_service.rb#L99) и все папки с этими файлами хранятся в папке `storage`.
 ![Сохранение файлов с Active Storage на диске через Disk service ](img/active_storage_blobs.png)
 
-Кроме файлов и рисунков контент-менеджер добавляет текст, нажимает на кнопку Опубликовать и сохраняет запись. Ссылка на файл сохраняется прямо в теле rich_text. При сохранении всего этого добра делается запись в таблицу `active_storage_attachments`, которая сохраняет связь между таблицами `action_text_rich_texts` и `active_storage_blobs`. 
+Когда контент-менеджер добавляет текст, нажимает на кнопку Опубликовать и сохраняет запись. Ссылка на файл сохраняется прямо в теле rich_text. Делается запись в таблицу `active_storage_attachments`, которая сохраняет связь между таблицами `action_text_rich_texts` и `active_storage_blobs`. 
 В таблице `active_storage_attachments`:
 * в поле `record_id` сохраняется `id` записи из таблицы `action_text_rich_texts`, 
 * в поле `record_type` сохраняется название модуля/класса записи из таблицы `action_text_rich_texts`,
