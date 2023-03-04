@@ -1,4 +1,4 @@
-# ActionText в Ruby on Rails. Обзор первого знакомста.
+# ActionText в Ruby on Rails. Обзор первого знакомства.
 
 Содержание
 
@@ -409,4 +409,4 @@ S3 Storage (45.7ms) Generated URL for file at key: ikydgdsgyrgupbqqh0wdqtgs75y4 
 * Использование пакета libvips вместо ImageMagick. [Пишут](https://github.com/libvips/libvips/wiki/Speed-and-memory-use), что libvips новее и быстрее.
 * сохранение нескольких вариантов изображений для разного размера экранов устройств с использованием таблицы `active_storage_variant_records`. В атрибуте [has_many_attached :embeds](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/actiontext/app/models/action_text/rich_text.rb#L15) класса `ActionText::RichText` я не нашла `variant`.
 
-На сегодня все. Удовольствия вам от программирования, друзья!
+Удовольствия вам от программирования, друзья!
