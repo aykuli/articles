@@ -1,23 +1,20 @@
-# ActionText в Ruby on Rails. Пользуемся и понимаем как.
+# ActionText в Ruby on Rails. Обзор первого знакомста.
 
 Содержание
 
 [Цель](#goal)
 [Сгенерированные файлы](#generated)
-[Связи в таблицах](#tables-relations)
 [Как экземпляр нашей модели связывается с экземпляром ActionText в таблице action_text_rich_texts?](#how-model-links-to-active-text)
 [Как сохраняются файлы/рисунки в записях?](#how-active_storage_blobs-save-files)
-[Настройка сохранения файлов на Minio сервер](#minio)
-
-
+[Итого](#end)
 ## <span id='goal'>Цель</span>
 
-Возможность создания, хранения и редактирования текста с рисунками, прикрепленными файлами - частая задача. Разработчику дают такую задачу, а наша (разработчиков) задача - сделать удобный инструмент контент-менеджеру.
+Возможность создания, хранения и редактирования текста с рисунками, прикрепленными файлами - частая задача. Суть задачи - сделать удобный инструмент контент-менеджеру для добавления текстовых данных на сайт.
 В [Ruby on Rails](https://rubyonrails.org/) для этой цели есть модуль [ActionText](https://api.rubyonrails.org/classes/ActionText.html) с [соответствующей  документацией](https://guides.rubyonrails.org/action_text_overview.html), который добавляет возможность редактирования текста в Rails. Он включает в себя редактор [Trix](https://trix-editor.org/), который написан на JavaScript, запускается на стороне клиента(браузера) и рисует довольно дружественный редактор.
 
 ![Trix редактор](img/trix_looks_like.png)
 
-Создание модели `Note`, контроллера, миграции, представлений (show/edit/new.html.erb), роутинга, связанных с этой моделью, и другие какие-то моменты я оставлю под капотом.
+Создание модели `Note`, контроллера, миграции, представлений (show/edit/new.html.erb), роутинга, связанных с этой моделью вне темы этой статьи.
 
 ## <span id='generated'>Сгенерированные файлы</span>
 Для начала работы с модулем `Action Text` устанавливаем нужные библиотеки командой:
@@ -29,29 +26,26 @@ bin/rails action_text:install
 
 ![Список измененных и сгенерированных файлов командой `bin/rails action_text:instal`](img/generated_and_changed_files.png)
 
-Для понимания хорошо бы прочитать эти файлы, чтобы понимать, что происходит. Пройдемся по ним и узнаем:
+Хорошо бы прочитать эти файлы, чтобы понимать, что происходит. Пройдемся по ним и узнаем:
 #### 1. `Gemfile`, `Gemfile.lock`
 
 Предыдущим действием мы устанавили гем [image_processing](https://github.com/janko/image_processing). Этот пакет нужен, чтобы обрабатывать(сжимать, изменять размер) и загружать рисунки в добавляемый контент. Этот гем использует либо [ImageMagick](https://www.imagemagick.org/)/[GraphicsMagick](https://www.imagemagick.org/), либо [libvips](http://libvips.github.io/libvips/).
 
 В `Gemfile.lock` можно посмотреть установленные библиотеки-зависимости для `image_processing`. Нужность их описана [здесь](https://guides.rubyonrails.org/active_storage_overview.html#requirements). 
-Для работы этого гема я добавила в `config/application.rb` строку:
+Для работы этого гема я добавила в `config/application.rb` строку [как написано в описании класса ActiveStorage::Variant](https://github.com/rails/rails/blob/aa2052ec4ceb64682828154e8669ac0327c678db/activestorage/app/models/active_storage/variant.rb#L14)):
 
 ```ruby
 config.active_storage.variant_processor = :mini_magick
 ```
-
-В последней версии Rails в файле `config/initializers/new_framework_defaults_7_0.rb:77` написано, что `:mini_magick` еще не `deprecated`.
 #### 3. `app/javascript/application.js`
 
 Здесь импортировали JavaScript библиотеки [trix](https://www.npmjs.com/package/trix) и [@rails/actiontext](https://www.npmjs.com/package/@rails/actiontext)
 
 #### 4. `config/importmap.rb`
 Здесь создаются соотвествия библиотек и сгенерированных js-файлов и отдаются клиенту в соответствии c этими названиями. Тут добавился JavaScript код для `Trix`. В `DevTools` во вкладке `Debugger` можно посмотреть эти соответсвия на рисунке ниже, где
-  1 - просматриваемая страница с редактором
-  2 - importmap
-  3 - собственно прожеванные файлы (js - ниже, css - выше)
-  4 - trix редактор в браузере.
+  1 - importmap
+  2 - js - файлы
+  3 - trix редактор в браузере.
 
 ![Importmap в действии](img/importmap-description.png)
 
@@ -60,8 +54,8 @@ config.active_storage.variant_processor = :mini_magick
 bin/rails assets:precompile
 ```
 
-#### 5. `test/fixtures/action_text/rich_texts.yml` - файл с тестовыми данными.
-#### 6. `app/assets/stylesheets/actiontext.css` - стили по умолчанию.
+#### 5. `test/fixtures/action_text/rich_texts.yml` - файл с тестовыми данными
+#### 6. `app/assets/stylesheets/actiontext.css` - стили по умолчанию
 
 <details>
 <summary>Содержимое файла</summary>
@@ -88,7 +82,7 @@ bin/rails assets:precompile
 ```
 </details>
 
-Вроде бы обычный css файл, но мы видим, что при генерации html используется элемент `action-text-attachment`, которого нет в списке [html-элементов](https://developer.mozilla.org/en-US/docs/Web/HTML/Element), но генерируется с [CustomElementRegistry](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry).
+Вроде бы обычный css файл, но мы видим, что при генерации html используется элемент `action-text-attachment`, которого нет в списке [html-элементов](https://developer.mozilla.org/en-US/docs/Web/HTML/Element), но генерируется html-элемент `<action-text-attachment>` с [CustomElementRegistry](https://developer.mozilla.org/en-US/docs/Web/API/CustomElementRegistry).
 
 #### 7. `db/migrate/20230210142600_create_active_storage_tables.active_storage.rb`
 
@@ -213,15 +207,7 @@ end
 
 После запуска миграции командой `bin/rails db:migrate` в итоге должны появится таблицы в вашей базе данных.
 
-
-<details>
-<summary>Вот так выглядит в `Rubymine Database tool window` созданные таблицы</summary>
-
-![Database tool window](img/rubymine-database-tool.png)
-</details>
-
-
-#### 9. app/views/layouts/action_text/contents/_content.html.erb
+#### 9. `app/views/layouts/action_text/contents/_content.html.erb`
 
 <details>
 <summary>Содержимое файла</summary>
@@ -269,6 +255,7 @@ end
 </details>
 
 В DevTools сохраненный контент с рисунком выглядит таким образом:
+
 ![](img/active_storage_blobs_attachments_html.png)
 
 В этом html куске страницы рисуется предпросмотр файла или изображение, данные о которой сохранены в таблице `active_storage_blobs`.
@@ -277,7 +264,7 @@ end
 
 Описание к рисунку хранится как часть текста в таблице `action_text_rich_texts`.
 
-Недостаток сгенерированного html-файла был в том, что в нем не рисуется ссылка на файл, чтобы его скачать, а иногда хочется. Для этого можно вставить ссылку на файл, застилизовав его. Я добавила условие, чтобы ссылки не было для рисунков.
+В `_blob.html.erb` я добавила ссылку на файл, чтобы его скачать с условием, чтобы ссылки не было для рисунков.
 
 ## <span id='how-model-links-to-active-text'>Как экземпляр нашей модели связывается с экземпляром ActionText в таблице action_text_rich_texts?</span>
 
@@ -318,8 +305,7 @@ end
 =begin
 <Note:0x00007efee9a06ce0                                                                
  id: 1,                                                                                  
- title_ru: "What is Lorem Ipsum?",                                                       
- title_en: "РыбаТекст помогает животным",                                                
+ title: "РыбаТекст помогает животным",                                                
  hidden: false,                                                                          
  created_at: Sun, 19 Feb 2023 11:24:47.510481000 UTC +00:00,                             
  updated_at: Sun, 19 Feb 2023 11:24:47.613920000 UTC +00:00> 
@@ -353,8 +339,7 @@ end
 =begin
 <Note:0x00007efee9a06ce0                                                                
  id: 1,                                                                                  
- title_ru: "What is Lorem Ipsum?",                                                       
- title_en: "РыбаТекст помогает животным",                                                
+ title: "РыбаТекст помогает животным",                                                
  hidden: false,                                                                          
  created_at: Sun, 19 Feb 2023 11:24:47.510481000 UTC +00:00,                             
  updated_at: Sun, 19 Feb 2023 11:24:47.613920000 UTC +00:00>
@@ -407,84 +392,21 @@ S3 Storage (45.7ms) Generated URL for file at key: ikydgdsgyrgupbqqh0wdqtgs75y4 
 Кроме файлов и рисунков контент-менеджер добавляет текст, нажимает на кнопку Опубликовать и сохраняет запись. Ссылка на файл сохраняется прямо в теле rich_text. При сохранении всего этого добра делается запись в таблицу `active_storage_attachments`, которая сохраняет связь между таблицами `action_text_rich_texts` и `active_storage_blobs`. 
 В таблице `active_storage_attachments`:
 * в поле `record_id` сохраняется `id` записи из таблицы `action_text_rich_texts`, 
-* в поле `record_type` сохраняется название модуля/класса записи из таблицы `action_text_rich_texts`, 
+* в поле `record_type` сохраняется название модуля/класса записи из таблицы `action_text_rich_texts`,
 * в поле `blob_id` сохраняется `id` файла/рисунка из таблицы `active_storage_blobs`,
 * в поле `name` сохраняется тип файла/рисунка
 
-## <span id='minio'>Настройка сохранения файлов на Minio сервер</span>
-Так как сохранять файлы в папке с проектом не хочется, я решила отправлять файлы на сервер на Minio. Делаем все согласно [документации](https://guides.rubyonrails.org/active_storage_overview.html#s3-service-amazon-s3-and-s3-compatible-apis) и все получается.
+## <span id='end'>Итого</span>
 
-1) **Устанавливаем нужный гем** `aws-sdk-s3`
+Охватила:
+* Описание файлов, генерируемых командой `bin/rails action_text:install`
+* Таблицы, создаваемые в базе данных, какие данные сохраняются в этих таблицах.
+* Встраивание Trix-редактора в нужную страницу через ассоциацию has_rich_text.
+* Способ сохранения файлов `AсtionText` по умолчанию.
 
-Прописываем в `Gemfile` строку:
-```ruby
-gem "aws-sdk-s3", require: false
-```
-и запускаем в консоли его установку:
-```shell
-bundle install
-```
-
-2) **Пишем конфигурацию** в `config/storage.yml`
-
-```yaml
-test:
-  service: Disk
-  root: <%= Rails.root.join("tmp/storage") %>
-
-local:
-  service: Disk
-  root: <%= Rails.root.join("storage") %>
-
-minio:
-  service: S3
-  endpoint: <%= ENV.fetch('MINIO_ENDPOINT') %>
-  access_key_id: <%= ENV.fetch('MINIO_ROOT_USER') %>
-  secret_access_key: <%= ENV.fetch('MINIO_ROOT_PASSWORD') %>
-  region: us-east-1
-  bucket: <%= ENV.fetch('MINIO_BUCKET') %>
-  force_path_style: true
-```
-
-В `.env` файле прописываем используемые переменнные. Напомню, что для использования этих переменных нужен гем `dotenv-rails`.
-
-
-3) **Настраиваем окружение**
-В файле `config/environment/production.rb`(можно и в development.rb) добавляем строку или переписываем уже имеющуюся:
-
-```ruby
-config.active_storage.service = :minio
-```
-
-4) **В `docker-compose.yml`** добавляем сервис minio:
-
-```yaml
-  minio:
-     image: minio/minio:latest
-     container_name: minio
-     volumes:
-       - /home/minio:/${MINIO_BUCKET}
-     ports:
-       - 9000:9000
-       - 9001:9001
-     environment:
-       MINIO_USER: ${MINIO_USER}
-       MINIO_PASSWORD: ${MINIO_PASSWORD}
-     command: server --console-address ":9001" /${MINIO_BUCKET}
-```
-
-5) **Добавляем** в Minio папку сохранения файлов (папку эту называют `bucket`).
-
-Я сделала это через пользовательский интерфейс Minio.
-
-6) **Проверяем**
-   
-Пробуем в нашем редакторе Trix сохранять файлы/рисунки и проверяем, что они сохраняются в Minio. Я проверяла в пользовательском интерфейсе Minio, доступный по ендпоинту Minio на порту 9001.
-
-Итого:
-Минимальный цикл CMS (content management system) вроде бы закрыт. Часть работы осталась под капотом, которая покрывается  Но некоторые вопросы в данной статье остались для меня открытыми. Например:
-* использование пакета [libvips](https://github.com/libvips/libvips) вместо [ImageMagick](https://imagemagick.org/index.php). Пишут, что второй новее и [быстрее](https://github.com/libvips/libvips/wiki/Speed-and-memory-use).
-* сохранение нескольких вариантов изображений для разного размера экранов устройств с использованием таблицы `active_storage_variant_records`. В атрибуте `has_many_attached :embeds` класса [ActionText::RichText](https://github.com/rails/rails/blob/b0dd7c7ae21d692b6e38428e8abe0e9538b75711/actiontext/app/models/action_text/rich_text.rb#L15) я не увидела `variant`, как показано в [документации](https://guides.rubyonrails.org/active_storage_overview.html#has-many-attached).
+На этом закончу. Очевидно, это еще не все. Далее надо разобраться с:
+* Выбор и настройка сервис для сохранения файлов, так как сохранять файлы в папке с проектом мне не хочется.
+* Использование пакета libvips вместо ImageMagick. [Пишут](https://github.com/libvips/libvips/wiki/Speed-and-memory-use), что libvips новее и быстрее.
+* сохранение нескольких вариантов изображений для разного размера экранов устройств с использованием таблицы `active_storage_variant_records`. В атрибуте [has_many_attached :embeds](https://github.com/rails/rails/blob/e9cb3c7b2f63bac810efb46cf8902cadaadcbdcd/actiontext/app/models/action_text/rich_text.rb#L15) класса `ActionText::RichText` я не нашла `variant`.
 
 На сегодня все. Удовольствия вам от программирования, друзья!
-
