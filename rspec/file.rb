@@ -1,6 +1,3 @@
-
-require 'byebug'
-
 class Suggestion
   def initialize(type:)
     @type = type
