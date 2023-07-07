@@ -1,22 +1,22 @@
 # Доступ между 2-мя ПК с Ubuntu в одной домашней сети для передачи файлов
 
-Моя проблема: переезжаю рабочее место с ноута ПК на другой. Лень создавать новые ssh-ключи и настраивать все. Лешче скопировать нужные файлы конфигурации или вообще всю папку `/home`. Хотя это неплохой повод прибраться в `/home`.
+Моя проблема: переезжаю рабочее место на новый ноутбук. Лень создавать новые ssh-ключи и настраивать все заново. Легче скопировать нужные файлы конфигурации или вообще всю папку `/home`. Хотя это неплохой повод прибраться в `/home`.
 
-Шаги для установления соединения:
+Лень и эмпатия (к себе в будущем, когда снова придется переезжать на новое железо) - генератор моих постов. Итак, делаю шаги для установления соеднинения:
 
-1. На ПК-источнике устанавливаю `openssh-server`:
+1. На ПК-источнике (старый ноутбук) устанавливаю `openssh-server`:
 
 ```bash
 sudo apt install openssh-server
 ```
 
-2. На ПК-приемнике проверяем наличие\устанавливаем `openssh-client`:
+2. На ПК-приемнике (новый ноутбук) проверяем наличие\устанавливаем `openssh-client`:
 
 ```bash
 sudo apt install openssh-client
 ```
 
-3. Узнаем IP-адрес ПК-источника с помощью библиотеки [`ifconfig`](https://en.wikipedia.org/wiki/Ifconfig) или `ip`:
+3. Узнаем IP-адрес ПК-источника с помощью `ifconfig`  или `ip`:
 
 ```bash
 ifconfig | grep -A 1 wl*
@@ -33,7 +33,7 @@ $ ip address | grep wl*
 
 ```
 
-Командой выше я смотрю строку с наличием подстроки `wl` и 1 строчку после найденной строки(там собственно адрес).
+Я смотрю строку с наличием подстроки `wl` - wlp1s0 (Wireless LAN on PCI bus 2 and slot 0).
 
 4. На ПК-приемнике соединяюсь в ПК-источнику:
 
@@ -64,3 +64,4 @@ $ ssh-add <path-to-your-private-ssh-key>
 * [Как мне настроить общий доступ к файлам между двумя ноутбуками Ubuntu в моей беспроводной сети?(в комментах предлагают самые разные варианты)](https://qa.yodo.im/t/kak-mne-nastroit-obshhij-dostup-k-fajlam-mezhdu-dvumya-noutbukami-ubuntu-v-moej-besprovodnoj-seti/3891/2)
 * [Почему wl* вместо старого wlan*?(Короткий ответ - изменения в соглашениях по наименованию сетевых интерфейсов)](https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/)
 * [Добавление ключа SSH в ssh-agent](https://docs.github.com/ru/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#adding-your-ssh-key-to-the-ssh-agent)
+* [Утилиты для работы с сетями в Linux kernel](https://en.wikipedia.org/wiki/Iproute2)
